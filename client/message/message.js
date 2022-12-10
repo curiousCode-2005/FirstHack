@@ -1,3 +1,5 @@
+
+var socket = io();
 let self_name = localStorage.getItem("self_name");
 //let personList = JSON.parse(localStorage.getItem("personList"));
 function texts() {
@@ -28,15 +30,13 @@ document.getElementById("AddBtn").addEventListener('click', function() {
 });
 
 
-let wss = new WebSocket('wss://Node-JS-Stuff.jaithrapagadala.repl.co');
+//let wss = new WebSocket('wss://Node-JS-Stuff.jaithrapagadala.repl.co');
 wss.binaryType = "arraybuffer";
 let encoder = new TextEncoder();
 let decoder = new TextDecoder();
 
 function send(message) {
-  wss.send(encoder.encode(JSON.stringify({
-    data: message
-  })));
+  socket.emit('chat message', message.value);
 }
 function decode_buffer(input) {
   return JSON.parse(decoder.decode(input)).data;
@@ -46,32 +46,25 @@ wss.addEventListener('open', function() {
   alert("Websocket is open!");
 });
 
-wss.addEventListener('open', function() {
-  //  alert("Connection");
-  //send("TEST");
-  wss.addEventListener('message', (event) => {
-    alert('Message from server ' + decode_buffer(event.data));
 
-    let decoded = decode_buffer(event.data);
-    let splitdecoded = decoded.split(';');
-
-    if (splitdecoded[0] == "M:") {
-      if (splitdecoded[2] == self_name) {
-        alert(decoded);
-        //add to textbook splitdecoded[2]
-        let personWhoSent = document.querySelectorAll("#personButton");
-        for (let i = 0; i < personWhoSent.length; i++) {
-          if (personWhoSent[i].value == splitdecoded[1])
-            personWhoSent[i].addEventListener('click', function() {
-              let sentTexts = document.querySelector(".Texts");
-              sentTexts.innerHTML += `<p>${splitdecoded[3]}</p>`;
-            });
-        }
+socket.on('chat message', function(msg) {
+  split = msg.split(';');
+  if (split[0] == "M:") {
+    if (split[2] == self_name) {
+      alert(msg);
+      //add to textbook split[2]
+      let personWhoSent = document.querySelectorAll("#personButton");
+      for (let i = 0; i < personWhoSent.length; i++) {
+        if (personWhoSent[i].value == split[1])
+          personWhoSent[i].addEventListener('click', function() {
+            let sentTexts = document.querySelector(".Texts");
+            sentTexts.innerHTML += `<p>${split[3]}</p>`;
+          });
       }
     }
-  });
-
+  }
 });
+
 
 
 
@@ -81,5 +74,4 @@ function sendMSG() {
 }
 
 texts();
-
 
